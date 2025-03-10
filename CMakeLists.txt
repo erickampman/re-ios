@@ -640,6 +640,37 @@ target_include_directories(re-objs PRIVATE include)
 target_include_directories(re-objs PRIVATE
   ${OPENSSL_INCLUDE_DIR} ${ZLIB_INCLUDE_DIRS})
 
+##############################################################################
+#
+# ChatGPT Recommendation -- ELK
+#
+
+find_package(OpenSSL REQUIRED)
+
+if(OpenSSL_FOUND)
+    message(STATUS "OpenSSL found: ${OPENSSL_SSL_LIBRARY}, ${OPENSSL_CRYPTO_LIBRARY}")
+    
+    # Manually set OpenSSL targets if they are missing
+    if(NOT TARGET OpenSSL::SSL)
+        add_library(OpenSSL::SSL UNKNOWN IMPORTED)
+        set_target_properties(OpenSSL::SSL PROPERTIES
+            IMPORTED_LOCATION "${OPENSSL_SSL_LIBRARY}"
+            INTERFACE_INCLUDE_DIRECTORIES "${OPENSSL_INCLUDE_DIR}"
+        )
+    endif()
+
+    if(NOT TARGET OpenSSL::Crypto)
+        add_library(OpenSSL::Crypto UNKNOWN IMPORTED)
+        set_target_properties(OpenSSL::Crypto PROPERTIES
+            IMPORTED_LOCATION "${OPENSSL_CRYPTO_LIBRARY}"
+            INTERFACE_INCLUDE_DIRECTORIES "${OPENSSL_INCLUDE_DIR}"
+        )
+    endif()
+    
+else()
+    message(FATAL_ERROR "OpenSSL not found!")
+endif()
+
 
 ##############################################################################
 #
@@ -649,7 +680,7 @@ target_include_directories(re-objs PRIVATE
 if(LIBRE_BUILD_SHARED)
   list(APPEND RE_INSTALL_TARGETS re-shared)
   add_library(re-shared SHARED $<TARGET_OBJECTS:re-objs>)
-  target_link_libraries(re-shared PRIVATE ${RE_LIBS})
+  target_link_libraries(re-shared PRIVATE ${RE_LIBS} OpenSSL::SSL OpenSSL::Crypto)
   set_target_properties(re-shared PROPERTIES VERSION
     ${PROJECT_SOVERSION}.${PROJECT_VERSION_MINOR}.${PROJECT_VERSION_PATCH})
   set_target_properties(re-shared PROPERTIES SOVERSION ${PROJECT_SOVERSION})
@@ -666,7 +697,7 @@ endif()
 if(LIBRE_BUILD_STATIC)
   list(APPEND RE_INSTALL_TARGETS re)
   add_library(re STATIC $<TARGET_OBJECTS:re-objs>)
-  target_link_libraries(re PRIVATE ${RE_LIBS})
+  target_link_libraries(re PRIVATE ${RE_LIBS} OpenSSL::SSL OpenSSL::Crypto)
   target_include_directories(re PUBLIC
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
   )
