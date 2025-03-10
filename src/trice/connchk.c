@@ -254,7 +254,7 @@ static void stunc_resp_handler(int err, uint16_t scode, const char *reason,
 	return;
 }
 
-
+#ifdef USE_STUN
 int trice_conncheck_stun_request(struct ice_checklist *ic,
 			       struct ice_conncheck *cc,
 			       struct ice_candpair *cp, void *sock,
@@ -361,7 +361,7 @@ int trice_conncheck_stun_request(struct ice_checklist *ic,
 
 	return err;
 }
-
+#endif /* USE_STUN */
 
 static bool tcpconn_frame_handler(struct trice *icem,
 				  struct tcp_conn *tc, struct sa *src,

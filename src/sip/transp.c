@@ -14,8 +14,12 @@
 #include <re_uri.h>
 #include <re_sys.h>
 #include <re_tmr.h>
+#ifdef USE_UDP_SIP
 #include <re_udp.h>
+#endif
+#ifdef USE_STUN
 #include <re_stun.h>
+#endif /* USE_STUN */
 #include <re_srtp.h>
 #include <re_tcp.h>
 #include <re_tls.h>
@@ -111,8 +115,10 @@ static void transp_destructor(void *arg)
 {
 	struct sip_transport *transp = arg;
 
+#ifdef USE_UDP_SIP
 	if (transp->tp == SIP_TRANSP_UDP)
 		udp_handler_set(transp->sock, NULL, NULL);
+#endif /* USE_UDP_SIP */
 
 	list_unlink(&transp->le);
 	hash_flush(transp->ht_ccert);
@@ -405,7 +411,7 @@ static void sip_recv(struct sip *sip, const struct sip_msg *msg,
 	}
 }
 
-
+#if defined(USE_STUN) || defined(USE_UDP_SIP)
 static void udp_recv_handler(const struct sa *src, struct mbuf *mb, void *arg)
 {
 	struct sip_transport *transp = arg;
@@ -461,6 +467,8 @@ static void udp_recv_handler(const struct sa *src, struct mbuf *mb, void *arg)
 
 	mem_deref(msg);
 }
+#endif /* defined(USE_STUN) || #defined(USE_UDP_SIP) */
+
 
 
 static void tcp_recv_handler(struct mbuf *mb, void *arg)
@@ -604,12 +612,14 @@ static void trace_send(struct sip *sip, enum sip_transp tp,
 
 		switch (tp) {
 
+#ifdef USE_UDP_SIP
 		case SIP_TRANSP_UDP:
 
 			if (udp_local_get(sock, &src))
 				sa_init(&src, sa_af(dst));
 
 			break;
+#endif /* USE_SIP_UDP */
 
 		case SIP_TRANSP_TCP:
 		case SIP_TRANSP_TLS:
@@ -1256,6 +1266,7 @@ static int add_transp(struct sip *sip, enum sip_transp tp,
 
 	switch (tp) {
 
+#ifdef USE_UDP_SIP
 	case SIP_TRANSP_UDP:
 		err = udp_listen((struct udp_sock **)&transp->sock, laddr,
 				 udp_recv_handler, transp);
@@ -1264,6 +1275,7 @@ static int add_transp(struct sip *sip, enum sip_transp tp,
 
 		err = udp_local_get(transp->sock, &transp->laddr);
 		break;
+#endif /* USE_UDP_SIP */
 
 	case SIP_TRANSP_TLS:
 		tls = va_arg(ap, struct tls *);
@@ -1526,7 +1538,9 @@ int sip_transp_send(struct sip_connqent **qentp, struct sip *sip, void *sock,
 		    struct mbuf *mb, sip_conn_h *connh, sip_transp_h *transph,
 		    void *arg)
 {
+#ifdef USE_UDP_SIP  /* ELK @1 only used for UDP */
 	const struct sip_transport *transp;
+#endif
 	struct sip_conn *conn;
 	bool secure = false;
 	struct sa dsttmp;
@@ -1543,6 +1557,7 @@ int sip_transp_send(struct sip_connqent **qentp, struct sip *sip, void *sock,
 
 	switch (tp) {
 
+#ifdef USE_UDP_SIP
 	case SIP_TRANSP_UDP:
 		err = sip_transp_laddr(sip, &laddr, tp, dst);
 		if (err)
@@ -1563,6 +1578,7 @@ int sip_transp_send(struct sip_connqent **qentp, struct sip *sip, void *sock,
 
 		err = udp_send(sock, &dsttmp, mb);
 		break;
+#endif /* USE_UDP_SIP */
 
 	case SIP_TRANSP_TLS:
 		secure = true;
@@ -1648,6 +1664,7 @@ int sip_transp_laddr(struct sip *sip, struct sa *laddr, enum sip_transp tp,
 		return EPROTONOSUPPORT;
 
 	*laddr = transp->laddr;
+	/* ELK @1 Leaving the below here, though I think it's a noop at this point */
 	if (tp != SIP_TRANSP_UDP) {
 		conncfg = sip_conncfg_find(sip, dst);
 		if (conncfg && conncfg->srcport)
@@ -1722,7 +1739,9 @@ const char *sip_transp_name(enum sip_transp tp)
 {
 	switch (tp) {
 
+#ifdef USE_UDP_SIP
 	case SIP_TRANSP_UDP: return "UDP";
+#endif
 	case SIP_TRANSP_TCP: return "TCP";
 	case SIP_TRANSP_TLS: return "TLS";
 	case SIP_TRANSP_WS:  return "WS";
@@ -1736,7 +1755,9 @@ const char *sip_transp_srvid(enum sip_transp tp)
 {
 	switch (tp) {
 
+#ifdef USE_UDP_SIP
 	case SIP_TRANSP_UDP: return "_sip._udp";
+#endif
 	case SIP_TRANSP_TCP: return "_sip._tcp";
 	case SIP_TRANSP_TLS: return "_sips._tcp";
 	default:             return "???";
@@ -1755,7 +1776,9 @@ const char *sip_transp_param(enum sip_transp tp)
 {
 	switch (tp) {
 
+#ifdef USE_UDP_SIP
 	case SIP_TRANSP_UDP: return "";
+#endif
 	case SIP_TRANSP_TCP: return ";transport=tcp";
 	case SIP_TRANSP_TLS: return ";transport=tls";
 	case SIP_TRANSP_WS:  return ";transport=ws";
@@ -1768,9 +1791,12 @@ const char *sip_transp_param(enum sip_transp tp)
 enum sip_transp sip_transp_decode(const struct pl *pl)
 {
 	enum sip_transp tp = SIP_TRANSP_NONE;
+#ifdef USE_UDP_SIP
 	if (!pl_strcasecmp(pl, "udp"))
 		tp = SIP_TRANSP_UDP;
-	else if (!pl_strcasecmp(pl, "tcp"))
+	else 
+#endif
+	if (!pl_strcasecmp(pl, "tcp"))
 		tp = SIP_TRANSP_TCP;
 	else if (!pl_strcasecmp(pl, "tls"))
 		tp = SIP_TRANSP_TLS;
@@ -1787,7 +1813,9 @@ bool sip_transp_reliable(enum sip_transp tp)
 {
 	switch (tp) {
 
+#ifdef USE_UDP_SIP
 	case SIP_TRANSP_UDP: return false;
+#endif
 	case SIP_TRANSP_TCP: return true;
 	case SIP_TRANSP_TLS: return true;
 	case SIP_TRANSP_WS:  return true;
@@ -1811,8 +1839,9 @@ uint16_t sip_transp_port(enum sip_transp tp, uint16_t port)
 		return port;
 
 	switch (tp) {
-
+#ifdef USE_UDP_SIP
 	case SIP_TRANSP_UDP: return SIP_PORT;
+#endif
 	case SIP_TRANSP_TCP: return SIP_PORT;
 	case SIP_TRANSP_TLS: return SIP_PORT_TLS;
 	case SIP_TRANSP_WS:  return 80;
@@ -1837,10 +1866,11 @@ int  sip_settos(struct sip *sip, uint8_t tos)
 		struct sip_transport *transp = le->data;
 		transp->tos = tos;
 		switch (transp->tp) {
+#ifdef USE_UDP_SIP
 		case SIP_TRANSP_UDP:
 			err = udp_settos(transp->sock, tos);
 			break;
-
+#endif /* USE_UDP_SIP */
 		case SIP_TRANSP_TCP:
 		case SIP_TRANSP_TLS:
 			err = tcp_settos(transp->sock, tos);

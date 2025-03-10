@@ -87,11 +87,12 @@ int sip_keepalive_start(struct sip_keepalive **kap, struct sip *sip,
 
 	switch (msg->tp) {
 
+#ifdef USE_UDP_SIP
 	case SIP_TRANSP_UDP:
 		err = sip_keepalive_udp(ka, sip, (struct udp_sock *)msg->sock,
 					&msg->src, interval);
 		break;
-
+#endif /* USE_UDP_SIP */
 	case SIP_TRANSP_TCP:
 	case SIP_TRANSP_TLS:
 		err = sip_keepalive_tcp(ka, (struct sip_conn *)msg->sock,

@@ -13,7 +13,9 @@
 #include <re_sys.h>
 #include <re_sa.h>
 #include <re_udp.h>
+#ifdef USE_STUN
 #include <re_stun.h>
+#endif
 #include <re_turn.h>
 #include <re_ice.h>
 #include "ice.h"
@@ -26,7 +28,7 @@
 
 enum {COMPID_MIN = 1, COMPID_MAX = 255};
 
-
+#ifdef USE_STUN		/* ELK this looks like it's entirely stun-specifc
 static bool helper_recv_handler(struct sa *src, struct mbuf *mb, void *arg)
 {
 	struct icem_comp *comp = arg;
@@ -61,6 +63,7 @@ static bool helper_recv_handler(struct sa *src, struct mbuf *mb, void *arg)
 
 	return true;  /* handled */
 }
+#endif /* USE_STUN */
 
 
 static void destructor(void *arg)

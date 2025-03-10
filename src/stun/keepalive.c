@@ -56,7 +56,7 @@ static void call_handler(struct stun_keepalive *ska, int err,
 		ska->mah(err, map, ska->arg);
 }
 
-
+#ifdef USE_STUN
 static void stun_response_handler(int err, uint16_t scode, const char *reason,
 				  const struct stun_msg *msg, void *arg)
 {
@@ -93,6 +93,7 @@ static void stun_response_handler(int err, uint16_t scode, const char *reason,
 	if (err)
 		call_handler(ska, err, NULL);
 }
+#endif /* USE_STUN */
 
 
 static void timeout(void *arg)
@@ -118,7 +119,7 @@ static void timeout(void *arg)
 	call_handler(ska, err, NULL);
 }
 
-
+#ifdef USE_STUN  /* ELK @1 another stun-only udp routine? */
 static bool udp_recv_handler(struct sa *src, struct mbuf *mb, void *arg)
 {
 	struct stun_keepalive *ska = arg;
@@ -158,6 +159,7 @@ static bool udp_recv_handler(struct sa *src, struct mbuf *mb, void *arg)
 
 	return hdld;
 }
+#endif /* USE_STUN */
 
 
 /**

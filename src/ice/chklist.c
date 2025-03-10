@@ -11,7 +11,9 @@
 #include <re_list.h>
 #include <re_tmr.h>
 #include <re_sa.h>
+#ifdef USE_STUN
 #include <re_stun.h>
+#endif
 #include <re_ice.h>
 #include "ice.h"
 

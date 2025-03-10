@@ -20,7 +20,6 @@
 #include <re_turn.h>
 #include "turnc.h"
 
-
 #define DEBUG_MODULE "turnc"
 #define DEBUG_LEVEL 5
 #include <re_dbg.h>
@@ -62,7 +61,9 @@ static void destructor(void *arg)
 	mem_deref(turnc->password);
 	mem_deref(turnc->nonce);
 	mem_deref(turnc->realm);
+#ifdef USE_STUN
 	mem_deref(turnc->stun);
+#endif
 	mem_deref(turnc->uh);
 	mem_deref(turnc->sock);
 }
@@ -93,7 +94,9 @@ static void refresh_timer(struct turnc *turnc)
 static void allocate_resp_handler(int err, uint16_t scode, const char *reason,
 				  const struct stun_msg *msg, void *arg)
 {
+#ifdef USE_STUN
 	struct stun_attr *map = NULL, *rel = NULL, *ltm, *alt;
+#endif
 	struct turnc *turnc = arg;
 
 	if (err || turnc_request_loops(&turnc->ls, scode))
@@ -101,6 +104,7 @@ static void allocate_resp_handler(int err, uint16_t scode, const char *reason,
 
 	switch (scode) {
 
+#ifdef USE_STUN /* ELK @1 assuming 0 is only for STUN ... */
 	case 0:
 		map = stun_msg_attr(msg, STUN_ATTR_XOR_MAPPED_ADDR);
 		rel = stun_msg_attr(msg, STUN_ATTR_XOR_RELAY_ADDR);
@@ -117,15 +121,17 @@ static void allocate_resp_handler(int err, uint16_t scode, const char *reason,
 		turnc->allocated = true;
 		refresh_timer(turnc);
 		break;
-
+#endif /* USE_STUN */
 	case 300:
 		if (turnc->proto == IPPROTO_TCP ||
 		    turnc->proto == STUN_TRANSP_DTLS)
 			break;
 
+#ifdef USE_STUN /* ELK @1 assuming the rest of 300 is only for STUN ... */
 		alt = stun_msg_attr(msg, STUN_ATTR_ALT_SERVER);
 		if (!alt)
 			break;
+
 
 		turnc->psrv = turnc->srv;
 		turnc->srv = alt->v.alt_server;
@@ -160,7 +166,7 @@ static void allocate_resp_handler(int err, uint16_t scode, const char *reason,
 		  turnc->arg);
 }
 
-
+#ifdef USE_STUN /* ELK @1 this should be renamed with "stun" in the name */
 static int allocate_request(struct turnc *t)
 {
 	const uint8_t proto = IPPROTO_UDP;
@@ -176,6 +182,7 @@ static int allocate_request(struct turnc *t)
 			    STUN_ATTR_NONCE, t->nonce,
 			    STUN_ATTR_SOFTWARE, stun_software);
 }
+#endif /* USE_STUN */
 
 
 static void refresh_resp_handler(int err, uint16_t scode, const char *reason,

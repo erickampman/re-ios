@@ -3,6 +3,8 @@
  *
  * Copyright (C) 2010 Creytiv.com
  */
+
+#ifdef USE_STUN		/* SHOULD BE INJECTED BY MAKE */
 #include <string.h>
 #include <re_types.h>
 #include <re_fmt.h>
@@ -271,3 +273,4 @@ int icem_stund_recv(struct icem_comp *comp, const struct sa *src,
  conflict:
 	return stunsrv_ereply(comp, src, presz, req, 487, "Role Conflict");
 }
+#endif /* USE_STUN */

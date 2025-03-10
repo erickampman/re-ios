@@ -11,7 +11,9 @@
 #include <re_list.h>
 #include <re_tmr.h>
 #include <re_sa.h>
+#ifdef USE_STUN
 #include <re_stun.h>
+#endif
 #include <re_ice.h>
 #include <re_trice.h>
 #include "trice.h"
@@ -28,7 +30,9 @@ static void destructor(void *arg)
 
 	tmr_cancel(&ic->tmr_pace);
 	list_flush(&ic->conncheckl);  /* flush before stun deref */
+#ifdef USE_STUN
 	mem_deref(ic->stun);
+#endif
 }
 
 
@@ -45,7 +49,7 @@ static void pace_timeout(void *arg)
 	trice_checklist_update(icem);
 }
 
-
+/* ELK @1 FIXME, remove stun arg */
 int trice_checklist_start(struct trice *icem, struct stun *stun,
 			  uint32_t interval,
 			  trice_estab_h *estabh, trice_failed_h *failh,
@@ -81,6 +85,7 @@ int trice_checklist_start(struct trice *icem, struct stun *stun,
 	if (!ic)
 		return ENOMEM;
 
+#ifdef USE_STUN
 	if (stun) {
 		ic->stun = mem_ref(stun);
 	}
@@ -94,6 +99,7 @@ int trice_checklist_start(struct trice *icem, struct stun *stun,
 		stun_conf(ic->stun)->rc = 4;
 
 	}
+#endif
 
 	tmr_init(&ic->tmr_pace);
 
@@ -314,7 +320,9 @@ int trice_checklist_debug(struct re_printf *pf, const struct ice_checklist *ic)
 		err |= re_hprintf(pf, " ...%H\n", trice_conncheck_debug, cc);
 	}
 
+#ifdef USE_STUN
 	err |= stun_debug(pf, ic->stun);
+#endif
 
 	return err;
 }

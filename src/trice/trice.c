@@ -449,7 +449,7 @@ void trice_switch_local_role(struct trice *ice)
 				  ice->lrole == ICE_ROLE_CONTROLLING);
 }
 
-
+#ifdef STUN
 /* sock = [ struct udp_sock | struct tcp_conn ] */
 bool trice_stun_process(struct trice *icem, struct ice_lcand *lcand,
 		       int proto, void *sock, const struct sa *src,
@@ -491,6 +491,7 @@ bool trice_stun_process(struct trice *icem, struct ice_lcand *lcand,
 
 	return true;
 }
+#endif /* USE_STUN */
 
 
 static void trice_reqbuf_destructor(void *data)

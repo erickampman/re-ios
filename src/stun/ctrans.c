@@ -154,7 +154,7 @@ static void tcp_close_handler(int err, void *arg)
 	completed(ct, err, 0, NULL, NULL);
 }
 
-
+#ifdef USE_STUN
 /**
  * Handle an incoming STUN message to a Client Transaction
  *
@@ -222,6 +222,7 @@ int stun_ctrans_recv(struct stun *stun, const struct stun_msg *msg,
 
 	return err;
 }
+#endif /* USE_STUN */
 
 
 int stun_ctrans_request(struct stun_ctrans **ctp, struct stun *stun, int proto,

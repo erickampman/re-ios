@@ -5,6 +5,7 @@
 # Copyright (C) 2022 Sebastian Reimers
 # Copyright (C) 2023 Christian Spielberger
 #
+# 2025-3-10 - Eric Kampman, conditionally remove STUN, label @1
 
 ##############################################################################
 #
@@ -57,6 +58,12 @@ option(USE_RTMP "Enable RTMP" ON)
 option(USE_SIP "Enable SIP" ON)
 option(LIBRE_BUILD_SHARED "Build shared library" ON)
 option(LIBRE_BUILD_STATIC "Build static library" ON)
+
+option(USE_STUN "Enable STUN support" OFF)      # Default: OFF, ELK @1
+option(USE_TURN "Enable TURN support" OFF)      # Default: OFF, this should be off if STUN is off. ELK @1
+option(USE_ICE "Enable ICE support" OFF)        # Default: OFF, this should be off if STUN is off. ELK @1
+option(USE_TRICE "Enable ICE support" OFF)      # Default: OFF, this should be off if ICE is off. ELK @1
+option(USE_UDP_SIP "Enable SIP over UDP" OFF)   # Default: OFF, ELK @1
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
@@ -278,16 +285,6 @@ set(SRCS
   src/httpauth/basic.c
   src/httpauth/digest.c
 
-  src/ice/cand.c
-  src/ice/candpair.c
-  src/ice/chklist.c
-  src/ice/comp.c
-  src/ice/connchk.c
-  src/ice/icem.c
-  src/ice/icesdp.c
-  src/ice/icestr.c
-  src/ice/stunsrv.c
-  src/ice/util.c
 
   src/json/decode.c
   src/json/decode_odict.c
@@ -360,18 +357,6 @@ set(SRCS
   src/srtp/srtp.c
   src/srtp/stream.c
 
-  src/stun/addr.c
-  src/stun/attr.c
-  src/stun/ctrans.c
-  src/stun/dnsdisc.c
-  src/stun/hdr.c
-  src/stun/ind.c
-  src/stun/keepalive.c
-  src/stun/msg.c
-  src/stun/rep.c
-  src/stun/req.c
-  src/stun/stun.c
-  src/stun/stunstr.c
 
   src/sys/daemon.c
   src/sys/endian.c
@@ -391,19 +376,6 @@ set(SRCS
 
   src/trace/trace.c
 
-  src/trice/cand.c
-  src/trice/candpair.c
-  src/trice/chklist.c
-  src/trice/connchk.c
-  src/trice/lcand.c
-  src/trice/rcand.c
-  src/trice/stunsrv.c
-  src/trice/tcpconn.c
-  src/trice/trice.c
-
-  src/turn/chan.c
-  src/turn/perm.c
-  src/turn/turnc.c
 
   src/udp/mcast.c
   src/udp/udp.c
@@ -413,6 +385,62 @@ set(SRCS
 
   src/websock/websock.c
 )
+
+if(USE_STUN)
+    list(APPEND_SRCS
+        src/stun/addr.c
+        src/stun/attr.c
+        src/stun/ctrans.c
+        src/stun/dnsdisc.c
+        src/stun/hdr.c
+        src/stun/ind.c
+        src/stun/keepalive.c
+        src/stun/msg.c
+        src/stun/rep.c
+        src/stun/req.c
+        src/stun/stun.c
+        src/stun/stunstr.c
+
+        src/ice/stunsrv.c
+    )
+endif()
+
+if(USE_TURN)
+    list(APPEND_SRCS
+        src/turn/chan.c
+        src/turn/perm.c
+        src/turn/turnc.c
+    )
+endif()
+
+if(USE_ICE)
+    list(APPEND_SRCS
+        src/ice/cand.c
+        src/ice/candpair.c
+        src/ice/chklist.c
+        src/ice/comp.c
+        src/ice/connchk.c
+        src/ice/icem.c
+        src/ice/icesdp.c
+        src/ice/icestr.c
+        src/ice/util.c
+    )
+endif()
+
+if(USE_TRICE)
+    list(APPEND_SRCS
+        src/trice/cand.c
+        src/trice/candpair.c
+        src/trice/chklist.c
+        src/trice/connchk.c
+        src/trice/lcand.c
+        src/trice/rcand.c
+        src/trice/stunsrv.c
+        src/trice/tcpconn.c
+        src/trice/trice.c
+    )
+endif()
+
 
 set(REM_SRCS
   rem/aac/aac.c
@@ -439,6 +467,17 @@ set(REM_SRCS
   rem/vidconv/vconv.c
   rem/vidmix/vidmix.c
 )
+
+#ELK want to force USE_TURN to be disabled if STUN is disabled... kind of awkward
+if(USE_STUN)
+    list(APPEND RE_DEFINITIONS -DUSE_STUN -DUSE_TURN -DUSE_ICE -DUSE_TRICE)
+else()
+
+endif()
+
+if(USE_UDP_SIP)
+    list(APPEND RE_DEFINITIONS -DUSE_UDP_SIP)
+endif()
 
 if(USE_UNIXSOCK)
   list(APPEND SRCS
@@ -494,7 +533,6 @@ if(USE_SIP)
     src/sip/ctrans.c
     src/sip/dialog.c
     src/sip/keepalive.c
-    src/sip/keepalive_udp.c
     src/sip/msg.c
     src/sip/rack.c
     src/sip/reply.c
@@ -525,6 +563,13 @@ if(USE_SIP)
     src/sipsess/update.c
   )
 endif()
+
+if(USE_UDP_SIP)
+    list(APPEND_SRCS
+        src/sip/keepalive_udp.c
+    )
+endif()
+
 
 
 if(USE_OPENSSL)
@@ -642,7 +687,7 @@ target_include_directories(re-objs PRIVATE
 
 ##############################################################################
 #
-# ChatGPT Recommendation -- ELK
+# ChatGPT Recommendation -- ELK  @0
 #
 
 find_package(OpenSSL REQUIRED)

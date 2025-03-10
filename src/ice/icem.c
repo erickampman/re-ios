@@ -10,7 +10,9 @@
 #include <re_list.h>
 #include <re_tmr.h>
 #include <re_sa.h>
+#ifdef USE_STUN
 #include <re_stun.h>
+#endif /* USE_STUN */
 #include <re_turn.h>
 #include <re_ice.h>
 #include "ice.h"
@@ -62,7 +64,9 @@ static void icem_destructor(void *data)
 	mem_deref(icem->lpwd);
 	mem_deref(icem->rufrag);
 	mem_deref(icem->rpwd);
+#ifdef USE_STUN
 	mem_deref(icem->stun);
+#endif
 }
 
 
@@ -126,6 +130,7 @@ int  icem_alloc(struct icem **icemp, enum ice_role role, int proto, int layer,
 
 	ice_determine_role(icem, role);
 
+#ifdef USE_STUN
 	err = stun_alloc(&icem->stun, NULL, NULL, NULL);
 	if (err)
 		goto out;
@@ -133,6 +138,7 @@ int  icem_alloc(struct icem **icemp, enum ice_role role, int proto, int layer,
 	/* Update STUN Transport */
 	stun_conf(icem->stun)->rto = icem->conf.rto;
 	stun_conf(icem->stun)->rc = icem->conf.rc;
+#endif /* USE_STUN */
 
  out:
 	if (err)
@@ -170,12 +176,14 @@ void icem_set_conf(struct icem *icem, const struct ice_conf *conf)
 
 	icem->conf = *conf;
 
+#ifdef USE_STUN
 	if (icem->stun) {
 
 		/* Update STUN Transport */
 		stun_conf(icem->stun)->rto = icem->conf.rto;
 		stun_conf(icem->stun)->rc = icem->conf.rc;
 	}
+#endif /* USE_STUN */
 }
 
 
@@ -448,7 +456,9 @@ int icem_debug(struct re_printf *pf, const struct icem *icem)
 	err |= re_hprintf(pf, " Valid list: %H",
 			  icem_candpairs_debug, &icem->validl);
 
+#ifdef USE_STUN
 	err |= stun_debug(pf, icem->stun);
+#endif
 
 	return err;
 }
@@ -524,11 +534,12 @@ int icem_comps_set_default_cand(struct icem *icem)
 	return err;
 }
 
-
+#ifdef USE_STUN
 struct stun *icem_stun(struct icem *icem)
 {
 	return icem ? icem->stun : NULL;
 }
+#endif /* USE_STUN */
 
 
 void icem_printf(struct icem *icem, const char *fmt, ...)

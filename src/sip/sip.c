@@ -14,7 +14,9 @@
 #include <re_sys.h>
 #include <re_tmr.h>
 #include <re_udp.h>
+#ifdef USE_STUN
 #include <re_stun.h>
+#endif
 #include <re_msg.h>
 #include <re_http.h>
 #include <re_websock.h>
@@ -83,7 +85,9 @@ static void destructor(void *arg)
 
 	mem_deref(sip->software);
 	mem_deref(sip->dnsc);
+#ifdef USE_STUN
 	mem_deref(sip->stun);
+#endif
 
 	mem_deref(sip->websock);
 }
@@ -145,9 +149,11 @@ int sip_alloc(struct sip **sipp, struct dnsc *dnsc, uint32_t ctsz,
 	if (err)
 		goto out;
 
+#ifdef USE_STUN
 	err = stun_alloc(&sip->stun, NULL, NULL, NULL);
 	if (err)
 		goto out;
+#endif
 
 	if (software) {
 		err = str_dup(&sip->software, software);

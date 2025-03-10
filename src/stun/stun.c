@@ -124,7 +124,7 @@ int stun_send(int proto, void *sock, const struct sa *dst, struct mbuf *mb)
 	return err;
 }
 
-
+#ifdef USE_STUN
 /**
  * Receive a STUN message
  *
@@ -170,7 +170,6 @@ int stun_recv(struct stun *stun, struct mbuf *mb)
 	return err;
 }
 
-
 /**
  * Print STUN instance debug information
  *
@@ -186,3 +185,4 @@ int stun_debug(struct re_printf *pf, const struct stun *stun)
 
 	return re_hprintf(pf, "STUN debug:\n%H", stun_ctrans_debug, stun);
 }
+#endif /* USE_STUN */
