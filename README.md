@@ -3,6 +3,8 @@ libre README
 
 ## Eric Kampman Notes (2025-03-10)
 - Don't use this (yet). It's early days and iOS support is not functional.
+- I'm disabling support for STUN, TURN, and ICE since I don't need them.
+-- It's unlikely that it will build with these enabled, as I probably won't test this. 
 
 # Original README Notes
 libre is a Generic library for real-time communications with async IO support.
