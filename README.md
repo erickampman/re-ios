@@ -1,7 +1,10 @@
 libre README
 ============
 
+## Eric Kampman Notes (2025-03-10)
+- Don't use this (yet). It's early days and iOS support is not functional.
 
+# Original README Notes
 libre is a Generic library for real-time communications with async IO support.
 
 - Copyright (C) 2010 - 2020 Creytiv.com
