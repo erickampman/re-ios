@@ -6,9 +6,13 @@ include(CheckCXXSourceCompiles)
 
 option(USE_MBEDTLS "Enable MbedTLS" OFF)
 
-find_package(Backtrace)
+if(USE_BACKTRACE)
+  find_package(Backtrace REQUIRED)
+endif()
 find_package(Threads REQUIRED)
-find_package(ZLIB)
+if(USE_ZLIB)
+  find_package(ZLIB REQUIRED)
+endif()
 
 if (USE_MBEDTLS)
 find_package(MBEDTLS)
