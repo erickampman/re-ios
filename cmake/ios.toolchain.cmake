@@ -1,7 +1,9 @@
 # iOS toolchain file for building re-ios via CMake + Xcode
 
-set(CMAKE_SYSTEM_NAME Darwin)
+set(CMAKE_SYSTEM_NAME iOS)
 set(CMAKE_SYSTEM_PROCESSOR arm64)
+set(CMAKE_HOST_SYSTEM_NAME Darwin)  # Optional, for host tools
+
 set(CMAKE_OSX_SYSROOT iphoneos)
 set(CMAKE_OSX_ARCHITECTURES arm64)
 set(CMAKE_OSX_DEPLOYMENT_TARGET "12.0" CACHE STRING "Minimum iOS version")
