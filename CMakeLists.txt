@@ -71,14 +71,22 @@ option(USE_UDP_SIP "Enable SIP over UDP" OFF)   # Default: OFF, ELK @1
 
 set(RE_LIBS "") # Make sure it's defined
 
-# Hard force no zlib
+# Force-disable ZLIB if not enabled
+if(NOT USE_ZLIB)
+  set(ZLIB_FOUND FALSE CACHE BOOL "ZLIB disabled" FORCE)
+  set(ZLIB_LIBRARY "" CACHE FILEPATH "ZLIB disabled" FORCE)
+  set(ZLIB_LIBRARIES "" CACHE FILEPATH "ZLIB disabled" FORCE)
+  set(ZLIB_INCLUDE_DIR "" CACHE PATH "ZLIB disabled" FORCE)
+  set(ZLIB_INCLUDE_DIRS "" CACHE PATH "ZLIB disabled" FORCE)
 
-set(ZLIB_FOUND FALSE CACHE BOOL "" FORCE)
-set(ZLIB_LIBRARY "" CACHE FILEPATH "" FORCE)
-set(ZLIB_LIBRARIES "" CACHE FILEPATH "" FORCE)
-set(ZLIB_INCLUDE_DIR "" CACHE PATH "" FORCE)
-set(ZLIB_INCLUDE_DIRS "" CACHE PATH "" FORCE)
-
+  # Provide a dummy target to silence link errors if referenced
+  if(NOT TARGET ZLIB::ZLIB)
+    add_library(ZLIB::ZLIB INTERFACE IMPORTED GLOBAL)
+    set_target_properties(ZLIB::ZLIB PROPERTIES
+      INTERFACE_INCLUDE_DIRECTORIES ""
+    )
+  endif()
+endif()
 
 ##############################################################################
 #
