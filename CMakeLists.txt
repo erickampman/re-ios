@@ -71,6 +71,15 @@ option(USE_UDP_SIP "Enable SIP over UDP" OFF)   # Default: OFF, ELK @1
 
 set(RE_LIBS "") # Make sure it's defined
 
+# Hard force no zlib
+
+set(ZLIB_FOUND FALSE CACHE BOOL "" FORCE)
+set(ZLIB_LIBRARY "" CACHE FILEPATH "" FORCE)
+set(ZLIB_LIBRARIES "" CACHE FILEPATH "" FORCE)
+set(ZLIB_INCLUDE_DIR "" CACHE PATH "" FORCE)
+set(ZLIB_INCLUDE_DIRS "" CACHE PATH "" FORCE)
+
+
 ##############################################################################
 #
 # Examine build config flags. ChatGPT ELK
