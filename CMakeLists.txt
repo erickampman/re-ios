@@ -55,8 +55,37 @@ option(USE_BFCP "Enable BFCP" ON)
 option(USE_PCP "Enable PCP" ON)
 option(USE_RTMP "Enable RTMP" ON)
 option(USE_SIP "Enable SIP" ON)
-option(LIBRE_BUILD_SHARED "Build shared library" ON)
+option(LIBRE_BUILD_SHARED "Build shared library" OFF)
 option(LIBRE_BUILD_STATIC "Build static library" ON)
+
+option(USE_ZLIB "Enable ZLIB compression support" OFF)
+option(USE_BACKTRACE "Enable Backtrace support" OFF)  # ELK seems to be unneeded FIXME remove
+option(USE_ICE "Enable ICE (Interactive Connectivity Establishment)" OFF)
+option(USE_STUN "Enable STUN protocol" OFF)
+
+option(USE_STUN "Enable STUN support" OFF)      # Default: OFF, ELK @1
+option(USE_TURN "Enable TURN support" OFF)      # Default: OFF, this should be off if STUN is off. ELK @1
+option(USE_ICE "Enable ICE support" OFF)        # Default: OFF, this should be off if STUN is off. ELK @1
+option(USE_TRICE "Enable ICE support" OFF)      # Default: OFF, this should be off if ICE is off. ELK @1
+option(USE_UDP_SIP "Enable SIP over UDP" OFF)   # Default: OFF, ELK @1
+
+set(RE_LIBS "") # Make sure it's defined
+
+##############################################################################
+#
+# Examine build config flags. ChatGPT ELK
+#
+
+if(USE_ZLIB)
+  # Add any zlib-related files or flags
+else()
+  set(ZLIB_INCLUDE_DIRS "")
+endif()
+
+if(USE_BACKTRACE)
+  # Possibly add backtrace sources
+endif()
+
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
@@ -664,6 +693,26 @@ endif()
 #
 
 if(LIBRE_BUILD_STATIC)
+
+  if(NOT TARGET OpenSSL::SSL)
+    add_library(OpenSSL::SSL STATIC IMPORTED GLOBAL)
+    set_target_properties(OpenSSL::SSL PROPERTIES
+      IMPORTED_LOCATION "${OPENSSL_SSL_LIBRARY}"
+      INTERFACE_INCLUDE_DIRECTORIES "${OPENSSL_INCLUDE_DIR}"
+    )
+  endif()
+
+  if(NOT TARGET OpenSSL::Crypto)
+    add_library(OpenSSL::Crypto STATIC IMPORTED GLOBAL)
+    set_target_properties(OpenSSL::Crypto PROPERTIES
+      IMPORTED_LOCATION "${OPENSSL_CRYPTO_LIBRARY}"
+      INTERFACE_INCLUDE_DIRECTORIES "${OPENSSL_INCLUDE_DIR}"
+    )
+  endif()
+
+  # Append to RE_LIBS
+  list(APPEND RE_LIBS OpenSSL::SSL OpenSSL::Crypto)
+
   list(APPEND RE_INSTALL_TARGETS re)
   add_library(re STATIC $<TARGET_OBJECTS:re-objs>)
   target_link_libraries(re PRIVATE ${RE_LIBS})
@@ -780,6 +829,19 @@ if(CMAKE_SOURCE_DIR STREQUAL CMAKE_CURRENT_SOURCE_DIR)
   add_subdirectory(packaging)
 endif()
 
+##############################################################################
+#
+# ChatGPT recommendations re test not having proper env variables  ELK
+#
+
+# Force OpenSSL paths for all downstream CMakeLists
+set(OPENSSL_ROOT_DIR "${CMAKE_SOURCE_DIR}/openssl" CACHE PATH "OpenSSL root")
+set(OPENSSL_INCLUDE_DIR "${OPENSSL_ROOT_DIR}/include" CACHE PATH "OpenSSL include")
+set(OPENSSL_CRYPTO_LIBRARY "${OPENSSL_ROOT_DIR}/libcrypto.a" CACHE FILEPATH "libcrypto")
+set(OPENSSL_SSL_LIBRARY "${OPENSSL_ROOT_DIR}/libssl.a" CACHE FILEPATH "libssl")
+
+set(OpenSSL_INCLUDE_DIR "${OPENSSL_INCLUDE_DIR}")
+set(OpenSSL_LIBRARIES "${OPENSSL_CRYPTO_LIBRARY};${OPENSSL_SSL_LIBRARY}")
 
 ##############################################################################
 # Test
