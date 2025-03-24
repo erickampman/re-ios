@@ -1,0 +1,7 @@
+
+cmake --preset ios-xcode
+
+# cmake .. \
+#   -G Xcode \
+#   -DCMAKE_TOOLCHAIN_FILE=../cmake/ios.toolchain.cmake
+
