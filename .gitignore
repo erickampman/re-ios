@@ -28,3 +28,19 @@ compile_commands.json
 
 # Visual studio config
 mk/win32/*.vcxproj.user
+
+# Build folders
+build*/
+*.xcodeproj
+*.xcworkspace
+
+# Xcode cruft
+*.pbxuser
+*.mode1v3
+*.mode2v3
+*.perspectivev3
+xcuserdata/
+
+# macOS system files
+.DS_Store
+
