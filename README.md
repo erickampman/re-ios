@@ -7,6 +7,12 @@ libre is a Generic library for real-time communications with async IO support.
 - Copyright (C) 2010 - 2020 Creytiv.com
 - Copyright (C) 2020 - 2025 Baresip Foundation (https://github.com/baresip)
 
+## Notes for re-ios (Eric Kampman fork)
+This is not, and is not intended to be, a complete port. 
+I need only SIP and RTP support (and encrypted versions thereof. 
+As of 2025 03 26 it is only half-baked and should be left in the oven.
+
+
 ![Build](https://github.com/baresip/re/workflows/Build/badge.svg)
 ![ccheck](https://github.com/baresip/re/workflows/ccheck/badge.svg)
 ![OpenSSL no-deprecated and LibreSSL](https://github.com/baresip/re/workflows/OpenSSL%20no-deprecated%20and%20LibreSSL/badge.svg)
