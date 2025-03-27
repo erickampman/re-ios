@@ -13,6 +13,10 @@
 
 cmake_minimum_required(VERSION 3.15...3.31)
 
+if(DEFINED CMAKE_TOOLCHAIN_FILE)
+  message(STATUS "✅ Toolchain file being used: ${CMAKE_TOOLCHAIN_FILE}")
+endif()
+
 project(re
   VERSION 3.20.0
   LANGUAGES C
@@ -676,76 +680,88 @@ endif()
 # Main target object
 #
 
-add_library(re-objs OBJECT ${SRCS} ${HEADERS})
-
-set_target_properties(re-objs PROPERTIES POSITION_INDEPENDENT_CODE ON)
-
-target_compile_definitions(re-objs PRIVATE ${RE_DEFINITIONS})
-
-target_include_directories(re-objs PRIVATE include)
-target_include_directories(re-objs PRIVATE
-  ${OPENSSL_INCLUDE_DIR} ${ZLIB_INCLUDE_DIRS})
-
+# add_library(re-objs OBJECT ${SRCS} ${HEADERS})
+# 
+# set_target_properties(re-objs PROPERTIES POSITION_INDEPENDENT_CODE ON)
+# 
+# target_compile_definitions(re-objs PRIVATE ${RE_DEFINITIONS})
+# 
+# target_include_directories(re-objs PRIVATE include)
+# target_include_directories(re-objs PRIVATE
+#   ${OPENSSL_INCLUDE_DIR} ${ZLIB_INCLUDE_DIRS})
+# 
 
 ##############################################################################
 #
 # Shared target libre.[so|dll|dylib]
 #
 
-if(LIBRE_BUILD_SHARED)
-  list(APPEND RE_INSTALL_TARGETS re-shared)
-  add_library(re-shared SHARED $<TARGET_OBJECTS:re-objs>)
-  target_link_libraries(re-shared PRIVATE ${RE_LIBS})
-  set_target_properties(re-shared PROPERTIES VERSION
-    ${PROJECT_SOVERSION}.${PROJECT_VERSION_MINOR}.${PROJECT_VERSION_PATCH})
-  set_target_properties(re-shared PROPERTIES SOVERSION ${PROJECT_SOVERSION})
-  set_target_properties(re-shared PROPERTIES OUTPUT_NAME "re")
-  add_library(libre::re-shared ALIAS re-shared)
-endif()
+# if(LIBRE_BUILD_SHARED)
+#   list(APPEND RE_INSTALL_TARGETS re-shared)
+#   add_library(re-shared SHARED $<TARGET_OBJECTS:re-objs>)
+#   target_link_libraries(re-shared PRIVATE ${RE_LIBS})
+#   set_target_properties(re-shared PROPERTIES VERSION
+#     ${PROJECT_SOVERSION}.${PROJECT_VERSION_MINOR}.${PROJECT_VERSION_PATCH})
+#   set_target_properties(re-shared PROPERTIES SOVERSION ${PROJECT_SOVERSION})
+#   set_target_properties(re-shared PROPERTIES OUTPUT_NAME "re")
+#   add_library(libre::re-shared ALIAS re-shared)
+# endif()
 
 
 ##############################################################################
 #
 # Static target libre.a
 #
+# if(LIBRE_BUILD_STATIC)
 
-if(LIBRE_BUILD_STATIC)
+# endif()  # LIBRE_BUILD_STATIC
 
-  if(NOT TARGET OpenSSL::SSL)
-    add_library(OpenSSL::SSL STATIC IMPORTED GLOBAL)
-    set_target_properties(OpenSSL::SSL PROPERTIES
-      IMPORTED_LOCATION "${OPENSSL_SSL_LIBRARY}"
-      INTERFACE_INCLUDE_DIRECTORIES "${OPENSSL_INCLUDE_DIR}"
-    )
-  endif()
-
-  if(NOT TARGET OpenSSL::Crypto)
-    add_library(OpenSSL::Crypto STATIC IMPORTED GLOBAL)
-    set_target_properties(OpenSSL::Crypto PROPERTIES
-      IMPORTED_LOCATION "${OPENSSL_CRYPTO_LIBRARY}"
-      INTERFACE_INCLUDE_DIRECTORIES "${OPENSSL_INCLUDE_DIR}"
-    )
-  endif()
-
-  # Append to RE_LIBS
-  list(APPEND RE_LIBS OpenSSL::SSL OpenSSL::Crypto)
-
-  list(APPEND RE_INSTALL_TARGETS re)
-  add_library(re STATIC $<TARGET_OBJECTS:re-objs>)
-  target_link_libraries(re PRIVATE ${RE_LIBS})
-  target_include_directories(re PUBLIC
-    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+# if(LIBRE_BUILD_STATIC)
+# Ensure OpenSSL is properly imported
+if(NOT TARGET OpenSSL::SSL)
+  add_library(OpenSSL::SSL STATIC IMPORTED GLOBAL)
+  set_target_properties(OpenSSL::SSL PROPERTIES
+    IMPORTED_LOCATION "${OPENSSL_SSL_LIBRARY}"
+    INTERFACE_INCLUDE_DIRECTORIES "${OPENSSL_INCLUDE_DIR}"
   )
-  add_library(libre::re ALIAS re)
-
-  if(MSVC)
-    set_target_properties(re PROPERTIES OUTPUT_NAME "re-static")
-    if(NOT LIBRE_BUILD_SHARED)
-      set(PC_LIBNAME "re-static")
-    endif()
-  endif()
 endif()
 
+if(NOT TARGET OpenSSL::Crypto)
+  add_library(OpenSSL::Crypto STATIC IMPORTED GLOBAL)
+  set_target_properties(OpenSSL::Crypto PROPERTIES
+    IMPORTED_LOCATION "${OPENSSL_CRYPTO_LIBRARY}"
+    INTERFACE_INCLUDE_DIRECTORIES "${OPENSSL_INCLUDE_DIR}"
+  )
+endif()
+
+# Prepare the list of link dependencies
+list(APPEND RE_LIBS OpenSSL::SSL OpenSSL::Crypto)
+
+add_library(re STATIC ${SRCS} ${HEADERS})
+
+list(APPEND RE_INSTALL_TARGETS re)
+
+set_target_properties(re PROPERTIES
+  OUTPUT_NAME "re"
+  ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/Release"
+  POSITION_INDEPENDENT_CODE ON
+  XCODE_GENERATE_SCHEME TRUE
+)
+
+target_compile_definitions(re PRIVATE ${RE_DEFINITIONS})
+
+target_include_directories(re PRIVATE
+  ${CMAKE_CURRENT_SOURCE_DIR}/include
+  ${OPENSSL_INCLUDE_DIR}
+  ${ZLIB_INCLUDE_DIRS}
+)
+
+target_link_libraries(re PRIVATE ${RE_LIBS})
+
+add_library(libre::re ALIAS re)
+add_custom_target(build-re ALL DEPENDS re)
+
+# endif()  # LIBRE_BUILD_STATIC
 
 ##############################################################################
 #
@@ -865,3 +881,13 @@ set(OpenSSL_LIBRARIES "${OPENSSL_CRYPTO_LIBRARY};${OPENSSL_SSL_LIBRARY}")
 #
 
 add_subdirectory(test EXCLUDE_FROM_ALL)
+
+##############################################################################
+# Check
+#
+
+get_property(_targets DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY BUILDSYSTEM_TARGETS)
+foreach(t ${_targets})
+  message(STATUS "  CMake sees target: ${t}")
+endforeach()
+

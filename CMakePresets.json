@@ -18,6 +18,13 @@
         "LIBRE_BUILD_SHARED": "OFF"
       }
     }
+  ],
+    "buildPresets": [
+    {
+      "name": "ios-xcode",
+      "configurePreset": "ios-xcode",
+      "configuration": "Release"
+    }
   ]
 }
 
