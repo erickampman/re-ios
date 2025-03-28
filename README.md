@@ -9,7 +9,7 @@ libre is a Generic library for real-time communications with async IO support.
 
 ## Notes for re-ios (Eric Kampman fork)
 This is not, and is not intended to be, a complete port. 
-I need only SIP and RTP support (and encrypted versions thereof. 
+I need only SIP and RTP support (and encrypted versions thereof). 
 - 2025-03-28 -- libbaresip.a is successfully built. See notes.txt for build instructions.
 
 ![Build](https://github.com/baresip/re/workflows/Build/badge.svg)
