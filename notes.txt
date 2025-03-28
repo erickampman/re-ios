@@ -1,10 +1,5 @@
-
+rm -rf build-ios
 cmake --preset ios-xcode
-
-cmake --build --preset ios-xcode --config Release --target re
-
-
-# cmake .. \
-#   -G Xcode \
-#   -DCMAKE_TOOLCHAIN_FILE=../cmake/ios.toolchain.cmake
+cmake --build --preset ios-xcode --target build-re
+find build-ios -name "libre.a"
 
