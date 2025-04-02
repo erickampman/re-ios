@@ -17,12 +17,31 @@
         "LIBRE_BUILD_STATIC": "ON",
         "LIBRE_BUILD_SHARED": "OFF"
       }
-    }
+    },
+    {
+      "name": "ios-xcode-sim",
+      "displayName": "iOS Simulator Xcode Build",
+      "generator": "Xcode",
+      "description": "Build for iOS Simulator using Xcode and ios.toolchain.cmake",
+      "binaryDir": "${sourceDir}/build-ios-sim",
+      "cacheVariables": {
+        "CMAKE_TOOLCHAIN_FILE": "cmake/ios.toolchain.cmake",
+        "CMAKE_OSX_SYSROOT": "iphonesimulator",
+        "CMAKE_OSX_ARCHITECTURES": "arm64;x86_64",
+        "LIBRE_BUILD_STATIC": "ON",
+        "LIBRE_BUILD_SHARED": "OFF"
+     }
+  }
   ],
     "buildPresets": [
     {
       "name": "ios-xcode",
       "configurePreset": "ios-xcode",
+      "configuration": "Release"
+    },
+    {
+      "name": "ios-xcode-sim",
+      "configurePreset": "ios-xcode-sim",
       "configuration": "Release"
     }
   ]

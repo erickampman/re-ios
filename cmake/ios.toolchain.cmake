@@ -1,13 +1,36 @@
 # iOS toolchain file for building re-ios via CMake + Xcode
 
-set(CMAKE_SYSTEM_NAME iOS)
-set(CMAKE_SYSTEM_PROCESSOR arm64)
-set(CMAKE_HOST_SYSTEM_NAME Darwin)  # Optional, for host tools
+# set(CMAKE_SYSTEM_NAME iOS)
+# set(CMAKE_SYSTEM_PROCESSOR arm64)
+# set(CMAKE_HOST_SYSTEM_NAME Darwin)  # Optional, for host tools
+# 
+# set(CMAKE_OSX_SYSROOT iphoneos)
+# set(CMAKE_OSX_ARCHITECTURES arm64)
+# set(CMAKE_OSX_DEPLOYMENT_TARGET "12.0" CACHE STRING "Minimum iOS version")
+# set(CMAKE_XCODE_ATTRIBUTE_ENABLE_BITCODE "NO")
 
-set(CMAKE_OSX_SYSROOT iphoneos)
-set(CMAKE_OSX_ARCHITECTURES arm64)
+# Set system info
+set(CMAKE_SYSTEM_NAME iOS)
+set(CMAKE_HOST_SYSTEM_NAME Darwin)  # Optional, for host tools
 set(CMAKE_OSX_DEPLOYMENT_TARGET "12.0" CACHE STRING "Minimum iOS version")
 set(CMAKE_XCODE_ATTRIBUTE_ENABLE_BITCODE "NO")
+
+# Determine platform and apply settings
+if(CMAKE_OSX_SYSROOT STREQUAL "iphoneos")
+  message(STATUS "✅ Configuring for iOS Device (iphoneos)")
+  set(CMAKE_SYSTEM_PROCESSOR arm64)
+  set(CMAKE_OSX_SYSROOT iphoneos)
+  set(CMAKE_OSX_ARCHITECTURES arm64 CACHE STRING "Device arch" FORCE)
+
+elseif(CMAKE_OSX_SYSROOT STREQUAL "iphonesimulator")
+  message(STATUS "✅ Configuring for iOS Simulator (iphonesimulator)")
+  set(CMAKE_SYSTEM_PROCESSOR x86_64)  # Most conservative default
+  set(CMAKE_OSX_SYSROOT iphonesimulator)
+  set(CMAKE_OSX_ARCHITECTURES "arm64;x86_64" CACHE STRING "Fat sim archs" FORCE)
+
+else()
+  message(WARNING "⚠️ Unknown platform for CMAKE_OSX_SYSROOT: ${CMAKE_OSX_SYSROOT}")
+endif()
 
 # Toolchain-relative OpenSSL
 # get_filename_component(TOOLCHAIN_DIR "${CMAKE_CURRENT_LIST_FILE}" PATH)

@@ -3,3 +3,25 @@ cmake --preset ios-xcode
 cmake --build --preset ios-xcode --target build-re
 find build-ios -name "libre.a"
 
+# Specified ios build
+rm -rf build-ios
+cmake -G Xcode -B build-ios \
+  -DCMAKE_TOOLCHAIN_FILE=cmake/ios.toolchain.cmake \
+  -DCMAKE_OSX_SYSROOT=iphoneos
+cmake --build build-ios --config Release
+
+# Specified simulator build
+cmake -G Xcode -B build-ios-sim \
+  -DCMAKE_TOOLCHAIN_FILE=cmake/ios.toolchain.cmake \
+  -DCMAKE_OSX_SYSROOT=iphonesimulator \
+  -DCMAKE_OSX_ARCHITECTURES="arm64;x86_64"
+cmake --build build-ios-sim --config Release
+
+# XCFramework
+xcodebuild -create-xcframework \
+  -library build-ios/Release/Release/libre.a \
+  -headers include \
+  -library build-ios-sim/Release/Release/libre.a \
+  -headers include \
+  -output re.xcframework
+

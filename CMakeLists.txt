@@ -17,6 +17,11 @@ if(DEFINED CMAKE_TOOLCHAIN_FILE)
   message(STATUS "✅ Toolchain file being used: ${CMAKE_TOOLCHAIN_FILE}")
 endif()
 
+# if(CMAKE_OSX_SYSROOT MATCHES "iphonesimulator")
+#   set(CMAKE_OSX_ARCHITECTURES "arm64;x86_64" CACHE STRING "Build fat sim binary" FORCE)
+#   message(STATUS "Building for simulator!")
+# endif()
+
 project(re
   VERSION 3.20.0
   LANGUAGES C
